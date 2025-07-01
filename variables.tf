@@ -1,21 +1,27 @@
 
 variable "project_id" {
-  description = "The GCP project ID."
+  description = "GCP Project ID"
   type        = string
 }
 
 variable "region" {
-  description = "The GCP region to deploy to."
+  description = "GCP Region"
   type        = string
-  default     = "us-central1"
+  default     = "europe-west9"
 }
 
-variable "github_owner" {
-  description = "The owner of the GitHub repository."
+variable "service_name" {
+  description = "Cloud Run service name"
+  type        = string
+  default     = "flask-api"
+}
+
+variable "github_username" {
+  description = "GitHub username"
   type        = string
 }
 
 variable "github_repo_name" {
-  description = "The name of the GitHub repository."
+  description = "GitHub repository name"
   type        = string
 }

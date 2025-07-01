@@ -1,0 +1,5 @@
+project_id        = "your-gcp-project-id"
+region            = "europe-west9"
+service_name      = "flask-api"
+github_username   = "your-github-username"
+github_repo_name  = "your-github-repo-name"
