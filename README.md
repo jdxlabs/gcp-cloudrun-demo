@@ -2,65 +2,98 @@
 
 A simple deployment on Cloud Run
 
-## Prerequisites
 
-Before you begin, ensure you have the following installed and configured:
+## Prerequisites
 
 *   **Terraform:** [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 *   **Google Cloud SDK:** [Install gcloud](https://cloud.google.com/sdk/docs/install)
 *   **A Google Cloud Platform (GCP) Project:** [Create a GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 
-## Setup and Deployment
 
-### 1. Configure Your GCP Project
+## Setup Instructions
 
-First, make sure you have a GCP project created and the gcloud CLI is authenticated:
+Active the Google Cloud APIs required for this project:
 
 ```bash
-gcloud auth login
-gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
+gcloud services enable \
+  cloudbuild.googleapis.com \
+  run.googleapis.com \
+  artifactregistry.googleapis.com \
+  iam.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  --project YOUR_PROJECT_ID
 ```
 
-### 2. Configure Terraform Variables
-
-Edit the `your-env.tfvars` file and provide the following information:
-
-*   `project_id`: Your GCP project ID.
-*   `region`: Your region.
-*   `service_name`: The name of your service.
-*   `github_username`: Your GitHub username.
-*   `github_repo_name`: The name of the repository you just created.
-
-### 4. Deploy with Terraform
+Verify that the required APIs are enabled
 
 ```bash
-# Initialize Terraform
+gcloud services list --enabled --project YOUR_PROJECT_ID
+```
+
+## Launch the Demo
+
+This project demonstrates how to deploy a simple Flask application on Google Cloud Run using Terraform. The application is containerized and stored in Google Artifact Registry, with automatic deployment triggered by changes pushed to a GitHub repository.
+
+The project includes a Terraform configuration that sets up the necessary resources in GCP, including:
+*   A Cloud Run service to run the Flask application.
+*   An Artifact Registry repository to store the Docker image.
+*   A Cloud Build trigger to automatically build and deploy the application when changes are pushed to the GitHub repository.
+
+### First, manually create the Cloudbuild trigger in the GCP console:
+1. Go to the [Cloud Build Triggers page](https://console.cloud.google.com/cloud-build/triggers).
+2. Click on **Create Trigger**.
+3. Set the following options:
+   - **Name:** `your-github-trigger`
+   - **Event:** `Push to a branch`
+   - **Source:** `GitHub`
+   - **Repository:** Select the repository you created for this project.
+   - **Branch:** `main`
+   - **Build Configuration:** `Cloud Build configuration file (yaml or json)`
+4. Click **Create** to finish setting up the trigger.
+
+### Now you can use Terraform to deploy the application:
+
+```bash
 terraform init
 
-# Plan the configuration
 terraform plan -var-file=your-env-dev.tfvars
-
-# Apply the configuration
 terraform apply -var-file=your-env-dev.tfvars
 ```
 
-Terraform will provision the following resources:
+This will create the necessary resources in your GCP project and deploy the Flask application to Cloud Run.
 
-*   **Cloud Run Service:** A fully managed service to run your containerized application.
-*   **Artifact Registry Repository:** A private Docker image repository to store your application's container image.
-*   **Cloud Build Trigger:** A trigger that automatically builds and deploys your application whenever you push changes to your GitHub repository.
+### Access the Application
 
-### 5. Access Your Application
+After the deployment is complete, you can access the Flask application using the URL provided in the output of the `terraform apply` command. The URL will look something like this:
 
-Once `terraform apply` is complete, it will output the URL of your service. You can access your running application at this URL.
+```bash
+curl https://your-service-name-abcdefg-uc.a.run.app
+```
 
-## Continuous Deployment
+### Clean Up
 
-This project is configured for continuous deployment. Any time you push a change to your GitHub repository, Cloud Build will automatically:
+To clean up the resources created by this project, you can run the following command:
 
-1.  Build a new Docker image from your code.
-2.  Push the image to your private Artifact Registry.
-3.  Deploy the new image to your Cloud Run service.
+```bash
+terraform destroy -var-file=your-env-dev.tfvars
+```
 
-This creates a seamless workflow for updating your application.
+
+## Notes
+
+- Make sure to replace `YOUR_PROJECT_ID` with your actual GCP project ID in the commands above.
+- The `config-dev.tfvars` file contains the configuration variables for your environment. Update it with your project details, such as `project_id`, `region`, `service_name`, `github_username`, and `github_repo_name`.
+- The Flask application is a simple API that returns a JSON response with a greeting message. You can modify the application code in the `app.py` file to customize the API behavior.
+
+
+## Troubleshooting
+
+If you encounter any issues during the deployment or access of the application, check the following:
+- Ensure that the Cloud Build trigger is correctly set up and linked to your GitHub repository.
+- Verify that the necessary APIs are enabled in your GCP project.
+- Check the Cloud Run service logs for any errors or issues during the deployment process.
+
+
+## License
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
