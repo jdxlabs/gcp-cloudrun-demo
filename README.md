@@ -39,7 +39,7 @@ The project includes a Terraform configuration that sets up the necessary resour
 *   An Artifact Registry repository to store the Docker image.
 *   A Cloud Build trigger to automatically build and deploy the application when changes are pushed to the GitHub repository.
 
-### First, manually create the Cloudbuild trigger in the GCP console:
+### Create the Cloudbuild trigger in the GCP console:
 1. Go to the [Cloud Build Triggers page](https://console.cloud.google.com/cloud-build/triggers).
 2. Click on **Create Trigger**.
 3. Set the following options:
@@ -50,6 +50,8 @@ The project includes a Terraform configuration that sets up the necessary resour
    - **Branch:** `main`
    - **Build Configuration:** `Cloud Build configuration file (yaml or json)`
 4. Click **Create** to finish setting up the trigger.
+
+Note : create a service account with the name `sa-cloudbuild` and assign it the `Cloud Build Service Account` and `Storage Admin` roles. This service account will be used by Cloud Build to deploy the application to Cloud Run.
 
 ### Now you can use Terraform to deploy the application:
 
