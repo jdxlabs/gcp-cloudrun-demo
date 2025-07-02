@@ -24,33 +24,36 @@ gcloud config set project YOUR_PROJECT_ID
 
 ### 2. Configure Terraform Variables
 
-Edit the `variables.tf` file and provide the following information:
+Edit the `your-env.tfvars` file and provide the following information:
 
 *   `project_id`: Your GCP project ID.
-*   `github_owner`: Your GitHub username.
+*   `region`: Your region.
+*   `service_name`: The name of your service.
+*   `github_username`: Your GitHub username.
 *   `github_repo_name`: The name of the repository you just created.
 
 ### 4. Deploy with Terraform
-
-Navigate to the `fastapi_cloudrun_demo` directory in your terminal and run the following commands:
 
 ```bash
 # Initialize Terraform
 terraform init
 
+# Plan the configuration
+terraform plan -var-file=your-env-dev.tfvars
+
 # Apply the configuration
-terraform apply
+terraform apply -var-file=your-env-dev.tfvars
 ```
 
 Terraform will provision the following resources:
 
-*   **Cloud Run Service:** A fully managed service to run your containerized FastAPI application.
+*   **Cloud Run Service:** A fully managed service to run your containerized application.
 *   **Artifact Registry Repository:** A private Docker image repository to store your application's container image.
 *   **Cloud Build Trigger:** A trigger that automatically builds and deploys your application whenever you push changes to your GitHub repository.
 
 ### 5. Access Your Application
 
-Once `terraform apply` is complete, it will output the URL of your service. You can access your running FastAPI application at this URL.
+Once `terraform apply` is complete, it will output the URL of your service. You can access your running application at this URL.
 
 ## Continuous Deployment
 

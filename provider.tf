@@ -14,15 +14,3 @@ provider "google" {
 
   credentials = file("dev.creds.json")
 }
-
-
-# Activate necessary APIs
-##
-
-resource "google_project_service" "cloud_run_api" {
-  service = "run.googleapis.com"
-}
-
-resource "google_project_service" "cloud_build_api" {
-  service = "cloudbuild.googleapis.com"
-}

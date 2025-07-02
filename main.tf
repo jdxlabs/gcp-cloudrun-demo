@@ -7,49 +7,30 @@ resource "google_artifact_registry_repository" "repo" {
   repository_id = "flask-repo"
   description   = "Repository for Flask app"
   format        = "DOCKER"
+
+  labels = {
+    managed_by = "terraform"
+  }
 }
 
-
-# Cloud Build, to trigger the build of the Docker image
-##
-
-resource "google_cloudbuild_trigger" "build_trigger" {
-  name        = "flask-app-build"
-  description = "Build Flask app Docker image"
-
-  github {
-    owner = var.github_username
-    name  = var.github_repo_name
-    push {
-      branch = "^main$"
-    }
+resource "null_resource" "build_image" {
+  triggers = {
+    dockerfile_hash   = filemd5("${path.root}/app/Dockerfile")
+    main_py_hash      = filemd5("${path.root}/app/main.py")
+    requirements_hash = filemd5("${path.root}/app/requirements.txt")
   }
 
-  build {
-    step {
-      name = "gcr.io/cloud-builders/docker"
-      args = [
-        "build",
-        "-t",
-        "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/flask-app:$COMMIT_SHA",
-        "./app"
-      ]
-    }
-
-    step {
-      name = "gcr.io/cloud-builders/docker"
-      args = [
-        "push",
-        "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/flask-app:$COMMIT_SHA"
-      ]
-    }
-
-    images = [
-      "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/flask-app:$COMMIT_SHA"
-    ]
+  provisioner "local-exec" {
+    command = <<-EOT
+      gcloud builds submit ${path.root}/app \
+        --tag ${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/flask-app:latest \
+        --project ${var.project_id}
+    EOT
   }
 
-  depends_on = [google_project_service.cloud_build_api]
+  depends_on = [
+    google_artifact_registry_repository.repo
+  ]
 }
 
 
@@ -60,7 +41,15 @@ resource "google_cloud_run_v2_service" "flask_service" {
   name     = var.service_name
   location = var.region
 
+  labels = {
+    managed_by = "terraform"
+  }
+
   template {
+    labels = {
+      managed_by = "terraform"
+    }
+
     containers {
       image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/flask-app:latest"
 
@@ -71,11 +60,6 @@ resource "google_cloud_run_v2_service" "flask_service" {
       env {
         name  = "NAME"
         value = "Cloud Run"
-      }
-
-      env {
-        name  = "PORT"
-        value = "8080"
       }
 
       resources {
@@ -92,7 +76,9 @@ resource "google_cloud_run_v2_service" "flask_service" {
     }
   }
 
-  depends_on = [google_project_service.cloud_run_api]
+  depends_on = [
+    null_resource.build_image
+  ]
 }
 
 
